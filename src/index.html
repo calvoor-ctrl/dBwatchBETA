@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="dBwatch">
+    <meta name="description" content="Real-time decibel level monitor PWA">
+    <link rel="manifest" href="../manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="../icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="../icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="../icons/icon-512x512.png">
+    <title>dB Watch</title>
+</head>
+<body>
+    <!-- Gear Icon (Controls Toggle) -->
+    <button id="gear_icon" class="gear-icon" aria-label="Controls" title="Controls">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+            <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+        </svg>
+    </button>
+
+    <!-- Simulation Slider (Vertical, under gear icon, hidden by default) -->
+    <div id="sim_slider_container" class="sim-slider-container hidden">
+        <input type="range" id="sim_slider" class="sim-slider-vertical" min="0" max="150" value="0" orient="vertical">
+    </div>
+
+    <!-- Message Board (Center Area for SVG Messages) -->
+    <div id="message_board" class="message-board">
+        <img src="../media/welcom_logo.svg" alt="Welcome" id="message_svg">
+    </div>
+
+    <!-- dB Reading Display (Bottom-Left) -->
+    <div id="dBreading" class="db-reading">
+        <span class="db-value">--</span><span class="db-suffix">dB</span>
+    </div>
+
+    <!-- Visualizer (Bottom Area) -->
+    <div id="visualizer" class="visualizer">
+        <!-- Bars will be generated dynamically by JavaScript -->
+    </div>
+
+    <!-- Update Notification Banner -->
+    <div id="update_banner" class="update-banner">
+        <span>A new version is available!</span>
+        <button onclick="applyUpdate()" class="update-btn">Update Now</button>
+        <button onclick="this.parentElement.classList.remove('visible')" class="dismiss-btn" aria-label="Dismiss">&times;</button>
+    </div>
+
+    <!-- Controls Dialog (Hidden by Default) -->
+    <dialog id="controls_dialog" class="controls-dialog">
+        <div class="dialog-header">
+            <h2>Controls</h2>
+            <button id="close_dialog" class="close-btn" aria-label="Close">&times;</button>
+        </div>
+        
+        <div class="dialog-content">
+            <!-- Show Visualizer Toggle -->
+            <div class="control-row">
+                <label for="show_visualizer">
+                    <input type="checkbox" id="show_visualizer" checked>
+                    Show visualizer
+                </label>
+            </div>
+
+            <!-- Show dB Reading Toggle -->
+            <div class="control-row">
+                <label for="show_db_reading">
+                    <input type="checkbox" id="show_db_reading" checked>
+                    Show dB reading
+                </label>
+            </div>
+
+            <!-- Sim Mode -->
+            <div class="control-row sim-mode-row">
+                <label for="sim_mode">
+                    <input type="checkbox" id="sim_mode">
+                    Sim mode
+                </label>
+            </div>
+
+            <!-- Status Messages -->
+            <div class="status-area">
+                <p id="status_message">Ready to listen …</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="button-group">
+                <button id="start_btn" class="btn btn-start">Start Listening</button>
+                <button id="stop_btn" class="btn btn-stop" disabled>Stop Listening</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script src="app.js"></script>
+</body>
+</html>
