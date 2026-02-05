@@ -1,5 +1,5 @@
 import { player } from './bootstrap.js';
-import { classify, getStateConfig, resolveTransition, buildRangePath } from './model.js';
+import { classify, getStateConfig, resolveTransition, buildRangePath, animationState } from './model.js';
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, Math.max(0, ms)));
 
@@ -89,21 +89,27 @@ export async function onReading(dbValue) {
     }
 
     try {
-        const normalizedValue = Number.isFinite(dbValue) ? dbValue : 0;
-        const nextRange = classify(normalizedValue);
-        if (!nextRange) {
+        const { range: nextRange, transition } = animationState.update(dbValue);
+        if (!nextRange) return;
+
+        if (nextRange === previousRange && !transition) {
             return;
         }
 
-        if (nextRange === previousRange) {
-            return;
-        }
-
-        const path = buildRangePath(previousRange, nextRange);
-        previousRange = nextRange;
-
+        const oldPrev = previousRange;
         const sequenceId = ++sequenceCounter;
+
+        if (transition) {
+            await loadClip({ src: transition.file, mode: transition.mode, loop: false });
+            await delay(transition.durationMs);
+            await playSteady(nextRange, sequenceId);
+            previousRange = nextRange;
+            return;
+        }
+
+        const path = buildRangePath(oldPrev, nextRange);
         await playTransitionSequence(path, sequenceId);
+        previousRange = nextRange;
     } catch (error) {
         console.warn('[animations] onReading failed', error);
     }

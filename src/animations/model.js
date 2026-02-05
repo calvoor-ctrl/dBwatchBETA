@@ -2,15 +2,13 @@
  * Animation model describing dB ranges, steady states, and transition clips.
  */
 
-export const STATE_SEQUENCE = ['S1', 'S2', 'S3', 'S4', 'S5'];
+export const STATE_SEQUENCE = ['S1', 'S2', 'S3', 'SF'];
 export const DEFAULT_TRANSITION_DURATION = 2000;
 
 export const ranges = {
-    S1: { label: '<70dB', min: -Infinity, max: 70, test: v => v < 70 },
-    S2: { label: '70–85dB', min: 70, max: 85, test: v => v >= 70 && v < 85 },
-    S3: { label: '85–100dB', min: 85, max: 100, test: v => v >= 85 && v < 100 },
-    S4: { label: '100–120dB', min: 100, max: 120, test: v => v >= 100 && v < 120 },
-    S5: { label: '120dB+', min: 120, max: Infinity, test: v => v >= 120 }
+    S1: { label: '<75dB', min: -Infinity, max: 75, test: v => v < 75 },
+    S2: { label: '75–90dB', min: 75, max: 90, test: v => v >= 75 && v < 90 },
+    S3: { label: '90db+', min: 90, max: Infinity, test: v => v >= 90 }
 };
 
 export const files = {
@@ -18,19 +16,19 @@ export const files = {
         S1: { file: './media/state_1.json', mode: 'forward', loop: true },
         S2: { file: './media/state_2.json', mode: 'forward', loop: true },
         S3: { file: './media/state_3.json', mode: 'forward', loop: true },
-        S4: { file: './media/state_4.json', mode: 'forward', loop: true },
-        S5: { file: './media/state_5.json', mode: 'forward', loop: true }
+        SF: { file: './media/state_final.json', mode: 'forward', loop: true }
     },
     transition: {
-        S1_S2: { file: './media/transition_1_2.json', durationMs: 2000 },
-        S2_S3: { file: './media/transition_2_3.json', durationMs: 2000 },
-        S3_S4: { file: './media/transition_3_4.json', durationMs: 2000 },
-        S4_S5: { file: './media/transition_4_5.json', durationMs: 2000 }
+        S1_S2: { file: './media/transition_1_2.json', durationMs: 700 },
+        S2_S3: { file: './media/transition_2_3.json', durationMs: 467 }
     }
 };
 
 export function classify(dbValue) {
-    const value = Number.isFinite(dbValue) ? dbValue : 0;
+    let value = Number(dbValue);
+    if (!Number.isFinite(value)) {
+        value = 0;
+    }
     for (const key of STATE_SEQUENCE) {
         const range = ranges[key];
         if (range?.test?.(value)) {
@@ -123,3 +121,87 @@ export function buildRangePath(prevRange, nextRange) {
     }
     return path;
 }
+
+// Stateful manager to handle SF (final state) timeout and persistence behavior.
+// - If input stays in `S3` continuously for `SF_TIMEOUT_MS`, switch to `SF`.
+// - While in `SF`, remain until input drops to `S2` (i.e. below 90dB).
+// - Exiting `SF` to `S2` returns a reverse-played `S2_S3` transition.
+export const SF_TIMEOUT_MS = 10000;
+
+export const animationState = {
+    currentRange: null,
+    inSF: false,
+    s3EnteredAt: null,
+
+    reset() {
+        this.currentRange = null;
+        this.inSF = false;
+        this.s3EnteredAt = null;
+    },
+
+    // Update state with the latest dB value. Returns { range, transition }.
+    // `transition` matches the shape returned by `resolveTransition` (or null).
+    update(dbValue, now = Date.now()) {
+        const baseRange = classify(dbValue);
+
+        // If currently in SF, only exit when input drops to S2
+        if (this.inSF) {
+            if (baseRange === 'S2') {
+                // Exit SF -> S2 using reverse of S2_S3 transition (if available)
+                this.inSF = false;
+                this.s3EnteredAt = null;
+                this.currentRange = 'S2';
+
+                const base = files.transition['S2_S3'];
+                if (base) {
+                    return {
+                        range: 'S2',
+                        transition: {
+                            key: 'S2_S3',
+                            direction: 'down',
+                            file: base.file,
+                            durationMs: base.durationMs ?? DEFAULT_TRANSITION_DURATION,
+                            mode: 'reverse'
+                        }
+                    };
+                }
+
+                // Fallback to generic resolveTransition behavior
+                return { range: 'S2', transition: resolveTransition('S3', 'S2') };
+            }
+
+            // Stay in SF for any other input
+            this.currentRange = 'SF';
+            return { range: 'SF', transition: null };
+        }
+
+        // Not in SF currently
+        if (baseRange === 'S3') {
+            // Mark time when S3 was first entered
+            if (this.s3EnteredAt == null) {
+                this.s3EnteredAt = now;
+            }
+
+            // If stayed in S3 long enough, enter SF
+            if (now - this.s3EnteredAt >= SF_TIMEOUT_MS) {
+                this.inSF = true;
+                this.currentRange = 'SF';
+                this.s3EnteredAt = null;
+                return { range: 'SF', transition: null };
+            }
+
+            // Otherwise, remain in S3 and return any adjacent transition
+            const transition = resolveTransition(this.currentRange, 'S3');
+            this.currentRange = 'S3';
+            return { range: 'S3', transition };
+        }
+
+        // Any non-S3 input clears the S3 timer
+        this.s3EnteredAt = null;
+
+        // Normal behavior for other ranges (S1, S2)
+        const transition = resolveTransition(this.currentRange, baseRange);
+        this.currentRange = baseRange;
+        return { range: baseRange, transition };
+    }
+};
