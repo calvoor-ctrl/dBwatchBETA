@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="dBwatch">
     <meta name="description" content="Real-time decibel level monitor PWA">
     <link rel="manifest" href="./manifest.json">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="./src/styles.css">
     <!-- Apple Touch Icons -->
     <link rel="apple-touch-icon" href="./icons/icon-152x152.png">
     <link rel="apple-touch-icon" sizes="192x192" href="./icons/icon-192x192.png">
@@ -17,6 +17,7 @@
     <title>dB Watch</title>
 </head>
 <body>
+    <canvas id="main_canvas" aria-hidden="true"></canvas>
     <!-- Gear Icon (Controls Toggle) -->
     <button id="gear_icon" class="gear-icon" aria-label="Controls" title="Controls">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
@@ -27,11 +28,6 @@
     <!-- Simulation Slider (Vertical, under gear icon, hidden by default) -->
     <div id="sim_slider_container" class="sim-slider-container hidden">
         <input type="range" id="sim_slider" class="sim-slider-vertical" min="0" max="150" value="0" orient="vertical">
-    </div>
-
-    <!-- Message Board (Center Area for SVG Messages) -->
-    <div id="message_board" class="message-board">
-        <img src="./media/welcom_logo.svg" alt="Welcome" id="message_svg">
     </div>
 
     <!-- dB Reading Display (Bottom-Left) -->
@@ -54,7 +50,10 @@
     <!-- Controls Dialog (Hidden by Default) -->
     <dialog id="controls_dialog" class="controls-dialog">
         <div class="dialog-header">
-            <h2>Controls</h2>
+            <div class="dialog-title-group">
+                <h2>Controls</h2>
+                <div id="controls_version" class="version-label" aria-live="polite">( version: ... )</div>
+            </div>
             <button id="close_dialog" class="close-btn" aria-label="Close">&times;</button>
         </div>
         
@@ -96,6 +95,7 @@
         </div>
     </dialog>
 
-    <script src="app.js"></script>
+    <script type="module" src="./src/animations/bootstrap.js"></script>
+    <script type="module" src="./src/app.js"></script>
 </body>
 </html>

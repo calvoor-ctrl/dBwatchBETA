@@ -1,0 +1,87 @@
+# dBwatch V2 Refactor - Search Inventory
+# Generated for Stage 0 — Preparation & Safety
+# Date: January 10, 2026
+
+================================================================================
+## index.html References
+================================================================================
+
+Source Files:
+- src/sw.js:12          - './index.html' (cache list)
+- src/sw.js:138         - './index.html' (fallback match)
+- manifest.json:56      - "start_url": "./src/index.html"
+
+Documentation/Plan Files:
+- .github/prompts/dbWatch-Development-plan.prompt.md (multiple references)
+- .github/prompts/dbWatch-V2-Refactor-plan.prompt.md (multiple references)
+- plan/plan_init.md
+
+================================================================================
+## manifest.json References
+================================================================================
+
+Source Files:
+- src/sw.js:15          - '../manifest.json' (cache list)
+- src/index.html:11     - <link rel="manifest" href="../manifest.json">
+
+Documentation/Plan Files:
+- .github/prompts/dbWatch-Development-plan.prompt.md (multiple references)
+- .github/prompts/dbWatch-V2-Refactor-plan.prompt.md (multiple references)
+- plan/plan_init.md:84
+
+================================================================================
+## message_board References
+================================================================================
+
+Source Files:
+- src/index.html:33     - <div id="message_board" class="message-board">
+
+Documentation/Plan Files:
+- .github/prompts/dbWatch-Development-plan.prompt.md:28
+- .github/prompts/dbWatch-V2-Refactor-plan.prompt.md:165, 167, 173
+- plan/plan_init.md:33
+
+================================================================================
+## background_image References
+================================================================================
+
+Source Files:
+- src/sw.js:22-26       - Cache list entries for background_image_0.png through background_image_4.png
+- src/app.js:37-41      - Asset mapping for noise levels (0-4)
+- src/styles.css:27-28  - CSS custom properties --current-bg and --next-bg
+
+Documentation/Plan Files:
+- .github/prompts/dbWatch-Development-plan.prompt.md:33, 171-175, 227-228
+- .github/prompts/dbWatch-V2-Refactor-plan.prompt.md:168-169, 174
+- plan/plan_init.md:12, 34, 49-53, 74
+
+================================================================================
+## controls_dialog References
+================================================================================
+
+Source Files:
+- src/index.html:55     - <dialog id="controls_dialog" class="controls-dialog">
+- src/app.js:48         - const controlsDialog = document.getElementById('controls_dialog');
+
+Documentation/Plan Files:
+- .github/prompts/dbWatch-Development-plan.prompt.md:32
+- .github/prompts/dbWatch-V2-Refactor-plan.prompt.md:127, 150, 194
+- plan/plan_init.md:31, 37-38, 55
+
+================================================================================
+## Summary
+================================================================================
+
+Files requiring updates in subsequent stages:
+1. src/index.html       - Will be moved to root; update internal paths
+2. manifest.json        - Update start_url, add version
+3. src/sw.js            - Update cache paths after index.html move
+4. src/app.js           - Update service worker registration path
+5. src/styles.css       - May need z-index adjustments for canvas layer
+
+Key elements to preserve:
+- controls_dialog functionality
+- visualizer updates
+- dBreading display
+- message_board (to be removed in Stage 5)
+- background image handling (to be simplified in Stage 5)

@@ -1,6 +1,7 @@
 {
   "name": "dB Watch",
   "short_name": "dBwatch",
+  "version": "2.0",
   "icons": [
     {
       "src": "icons/icon-48x48.png",

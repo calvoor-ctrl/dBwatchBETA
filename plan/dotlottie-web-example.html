@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Lottie Animation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #1a1a1a;
+      }
+
+      .canvas-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      }
+
+      #main-canvas {
+        max-width: 100%;
+        max-height: calc(100vh - 60px);
+      }
+
+      .button-container {
+        display: flex;
+        gap: 20px;
+        padding: 15px;
+        background-color: #2a2a2a;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .btn {
+        padding: 10px 30px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        border: none;
+        border-radius: 5px;
+        background-color: #4a90d9;
+        color: white;
+        transition: background-color 0.3s ease;
+      }
+
+      .btn:hover {
+        background-color: #357abd;
+      }
+
+      .btn.active {
+        background-color: #2e6da4;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas-container">
+      <canvas id="main-canvas"></canvas>
+    </div>
+    <div class="button-container">
+      <button id="btn-img1" class="btn active">IMG-1</button>
+      <button id="btn-img2" class="btn">IMG-2</button>
+    </div>
+
+    <script type="module">
+      import { DotLottie } from "./dotlottie-web.js";
+
+      const canvas = document.getElementById("main-canvas");
+      const btnImg1 = document.getElementById("btn-img1");
+      const btnImg2 = document.getElementById("btn-img2");
+
+      // Set canvas size to fill the screen
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight - 60; // Account for button container
+      }
+
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+
+      let currentDotLottie = null;
+
+      // Function to load a Lottie animation
+      function loadAnimation(src) {
+        // Destroy existing animation if any
+        if (currentDotLottie) {
+          currentDotLottie.destroy();
+        }
+
+        // Create new DotLottie instance
+        currentDotLottie = new DotLottie({
+          autoplay: true,
+          loop: true,
+          canvas: canvas,
+          src: src,
+          mode: "forward"
+        });
+      }
+
+      // Load default animation (star.json)
+      loadAnimation("star.json");
+
+      // Button event listeners
+      btnImg1.addEventListener("click", () => {
+        loadAnimation("star.json");
+        btnImg1.classList.add("active");
+        btnImg2.classList.remove("active");
+      });
+
+      btnImg2.addEventListener("click", () => {
+        loadAnimation("Live chatbot.json");
+        btnImg2.classList.add("active");
+        btnImg1.classList.remove("active");
+      });
+    </script>
+  </body>
+</html>

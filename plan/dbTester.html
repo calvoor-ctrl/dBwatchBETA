@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Audio Monitor">
+    <meta name="description" content="Real-time microphone audio level monitor">
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Audio%20Level%20Monitor%22,%22short_name%22:%22Audio%20Monitor%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%23667eea%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='100' fill='white' text-anchor='middle' dominant-baseline='middle'>🎤</text></svg>%22,%22sizes%22:%22192x192%22,%22type%22:%22image/svg+xml%22,%22purpose%22:%22any%22}]}">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23667eea' width='180' height='180'/><text x='50%' y='50%' font-size='90' fill='white' text-anchor='middle' dominant-baseline='middle'>🎤</text></svg>">
+    <title>Microphone Audio Level Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .start-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .start-btn:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .stop-btn {
+            background: #f093fb;
+            color: white;
+        }
+
+        .stop-btn:hover:not(:disabled) {
+            background: #d67ce1;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
+        }
+
+        .stop-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .display-box {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .display-value {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            color: #333;
+            font-weight: bold;
+            word-break: break-all;
+            min-height: 35px;
+        }
+
+        .status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status.idle {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status.listening {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 13px;
+            color: #555;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 13px;
+            color: #666;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        .visualizer {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 20px;
+            height: 40px;
+            align-items: flex-end;
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+            min-height: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Audio Level Monitor</h1>
+        <p class="subtitle">Real-time microphone input visualization</p>
+
+        <div class="button-group">
+            <button class="start-btn" id="startBtn">Start Listening</button>
+            <button class="stop-btn" id="stopBtn" disabled>Stop Listening</button>
+        </div>
+
+        <div class="visualizer" id="visualizer"></div>
+
+        <div class="display-box">
+            <div class="display-value" id="displayValue">Waiting...</div>
+        </div>
+
+        <div class="status idle" id="status">Ready to listen</div>
+
+        <div class="info-box">
+            <strong>ℹ️ How it works:</strong><br>
+            • Captures audio from your microphone<br>
+            • Displays RMS amplitude and decibel level<br>
+            • Updates in real-time<br>
+            • Requires microphone permission
+        </div>
+    </div>
+
+    <script>
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:application/javascript,').catch(err => console.log('SW registration skipped'));
+        }
+
+        let audioContext = null;
+        let analyser = null;
+        let microphone = null;
+        let animationId = null;
+        let dataArray = null;
+        let isListening = false;
+        let mediaStream = null;
+
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const displayValue = document.getElementById('displayValue');
+        const status = document.getElementById('status');
+        const visualizer = document.getElementById('visualizer');
+
+        function setStatus(message, type) {
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function calculateRMS(data) {
+            let sum = 0;
+            for (let i = 0; i < data.length; i++) {
+                sum += data[i] * data[i];
+            }
+            return Math.sqrt(sum / data.length);
+        }
+
+        function calculateDB(rms, reference = 0.00001) {
+            if (rms > 0) {
+                return 20 * Math.log10(rms / reference);
+            }
+            return -Infinity;
+        }
+
+        function updateVisualizer(data) {
+            visualizer.innerHTML = '';
+            const step = Math.floor(data.length / 30);
+           
+            for (let i = 0; i < data.length; i += step) {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                const height = (Math.abs(data[i]) * 200);
+                bar.style.height = `${Math.max(2, height)}px`;
+                visualizer.appendChild(bar);
+            }
+        }
+
+        function updateDisplay() {
+            analyser.getByteFrequencyData(dataArray);
+           
+            // Convert byte data to normalized float values
+            const normalizedData = Array.from(dataArray).map(x => x / 255);
+           
+            // Calculate RMS
+            const rms = calculateRMS(normalizedData);
+           
+            // Calculate DB
+            const db = calculateDB(rms);
+           
+            // Update display
+            displayValue.textContent = `Decibel: ${db.toFixed(1)} dB`;
+           
+            // Update visualizer
+            updateVisualizer(normalizedData);
+           
+            // Wait 1 second before next update
+            setTimeout(() => {
+                if (isListening) {
+                    animationId = requestAnimationFrame(updateDisplay);
+                }
+            }, 250);
+        }
+
+        async function startListening() {
+            try {
+                setStatus('Requesting microphone access...', 'idle');
+               
+                // Step 1: Stop any existing stream
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    mediaStream = null;
+                }
+               
+                // Step 2: Get microphone stream
+                console.log('Getting microphone stream...');
+                const constraints = {
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false
+                    }
+                };
+               
+                mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+                console.log('Microphone stream obtained successfully');
+               
+                // Step 3: Create fresh AudioContext
+                console.log('Creating AudioContext...');
+                console.log('window.AudioContext:', typeof window.AudioContext);
+                console.log('window.webkitAudioContext:', typeof window.webkitAudioContext);
+               
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) {
+                    throw new Error('Web Audio API not supported in this browser');
+                }
+               
+                audioContext = new AudioContextClass();
+                console.log('AudioContext type:', typeof audioContext);
+                console.log('AudioContext constructor:', audioContext.constructor.name);
+                console.log('AudioContext state:', audioContext.state);
+                console.log('AudioContext methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(audioContext)));
+               
+                // Step 4: Resume if needed
+                if (audioContext.state === 'suspended') {
+                    console.log('Resuming AudioContext...');
+                    await audioContext.resume();
+                }
+               
+                // Step 5: Create media stream source (use correct method name)
+                console.log('Creating MediaStreamSource...');
+               
+                // Try the newer name first, fall back to older name
+                if (typeof audioContext.createMediaStreamAudioSource === 'function') {
+                    microphone = audioContext.createMediaStreamAudioSource(mediaStream);
+                } else if (typeof audioContext.createMediaStreamSource === 'function') {
+                    microphone = audioContext.createMediaStreamSource(mediaStream);
+                } else {
+                    throw new Error('Neither createMediaStreamAudioSource nor createMediaStreamSource available');
+                }
+               
+                console.log('MediaStreamSource created:', typeof microphone);
+               
+                // Step 7: Create analyser
+                console.log('Creating Analyser...');
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                console.log('Analyser ready, FFT size:', analyser.fftSize);
+               
+                // Step 8: Connect
+                console.log('Connecting nodes...');
+                microphone.connect(analyser);
+               
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+               
+                isListening = true;
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+               
+                setStatus('🎤 Listening...', 'listening');
+                console.log('Ready! Starting audio capture.');
+                updateDisplay();
+               
+            } catch (error) {
+                console.error('ERROR:', error.name, '-', error.message);
+                console.error('Stack:', error.stack);
+               
+                let errorMsg = error.message;
+                if (error.name === 'NotAllowedError') {
+                    errorMsg = 'Microphone permission denied. Please allow access.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMsg = 'No microphone found on this device.';
+                } else if (error.name === 'NotReadableError') {
+                    errorMsg = 'Microphone is in use by another app. Close it and try again.';
+                } else if (error.name === 'SecurityError') {
+                    errorMsg = 'Security error. Try serving over HTTPS or localhost.';
+                }
+               
+                setStatus(`Error: ${errorMsg}`, 'error');
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                isListening = false;
+            }
+        }
+
+        function stopListening() {
+            console.log('Stopping audio capture...');
+           
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+           
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => {
+                    track.stop();
+                    console.log('Stopped track:', track.kind);
+                });
+                mediaStream = null;
+            }
+           
+            if (microphone) {
+                microphone.disconnect();
+                microphone = null;
+            }
+           
+            isListening = false;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            displayValue.textContent = 'Waiting...';
+            visualizer.innerHTML = '';
+           
+            setStatus('Ready to listen', 'idle');
+            console.log('Audio capture stopped.');
+        }
+
+        startBtn.addEventListener('click', startListening);
+        stopBtn.addEventListener('click', stopListening);
+
+        // Request notification permission for PWA
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    </script>
+</body>
+</html>
