@@ -1,5 +1,6 @@
 import { onReading } from './animations/controller.js';
 import { getBackgroundColor } from './animations/model.js';
+import { player } from './animations/bootstrap.js';
 
 /**
  * dBwatch PWA - Stage 5: Polish & Integration
@@ -274,6 +275,32 @@ async function startListening() {
 
         // Update state
         isListening = true;
+        // Mark document as listening so CSS scaling is disabled
+        try {
+            document.body.classList.add('listening');
+        } catch (e) {
+            /* ignore */
+        }
+        // Ensure Lottie player recalculates bounds now that layout may change
+        try {
+            if (player) {
+                const ratio = window.devicePixelRatio || 1;
+                const w = Math.floor(window.innerWidth * ratio);
+                const h = Math.floor(window.innerHeight * ratio);
+                if (typeof player.setLayout === 'function') {
+                    player.setLayout({ fit: 'cover' });
+                }
+                if (typeof player.setRenderConfig === 'function') {
+                    player.setRenderConfig({ devicePixelRatio: ratio });
+                }
+                if (typeof player.resize === 'function') {
+                    // don't block the audio flow; kick off resize
+                    player.resize({ width: w, height: h });
+                }
+            }
+        } catch (e) {
+            console.warn('[animations] resize after startListening failed', e);
+        }
         updateButtonStates();
         setStatus('Listening...');
         console.log('Audio capture started successfully');
@@ -313,6 +340,12 @@ function stopListening() {
     stopAudioResources();
     isListening = false;
     updateButtonStates();
+    // Remove listening marker so CSS scaling can apply again if desired
+    try {
+        document.body.classList.remove('listening');
+    } catch (e) {
+        /* ignore */
+    }
     
     // Reset display
     dbValueElement.textContent = '--';

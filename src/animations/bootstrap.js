@@ -115,3 +115,44 @@ if (player && typeof player.setRenderConfig === 'function') {
         console.warn('[animations] Failed to apply renderConfig devicePixelRatio', e);
     }
 }
+
+// Force transparent canvas background so body background shows through
+try {
+    if (player && typeof player.setBackgroundColor === 'function') {
+        player.setBackgroundColor('transparent');
+    } else if (canvas) {
+        canvas.style.backgroundColor = 'transparent';
+    }
+} catch (e) {
+    console.warn('[animations] Failed to force transparent canvas background', e);
+}
+
+// Wrap/monkey-patch player's load to ensure layout + resize + transparent background are applied after every load
+if (player && typeof player.load === 'function') {
+    const originalLoad = player.load.bind(player);
+    player.load = async function (opts) {
+        const res = await originalLoad(opts);
+        try {
+            // Ensure layout=cover and DPR applied
+            if (typeof player.setLayout === 'function') {
+                player.setLayout({ fit: 'cover' });
+            }
+            if (typeof player.setRenderConfig === 'function') {
+                player.setRenderConfig({ devicePixelRatio: window.devicePixelRatio || 1 });
+            }
+            // Resize to current canvas pixel size
+            if (typeof player.resize === 'function' && canvas) {
+                const ratio = window.devicePixelRatio || 1;
+                await player.resize({ width: Math.floor(window.innerWidth * ratio), height: Math.floor(window.innerHeight * ratio) });
+            }
+            if (typeof player.setBackgroundColor === 'function') {
+                player.setBackgroundColor('transparent');
+            } else if (canvas) {
+                canvas.style.backgroundColor = 'transparent';
+            }
+        } catch (e) {
+            console.warn('[animations] post-load adjustments failed', e);
+        }
+        return res;
+    };
+}
