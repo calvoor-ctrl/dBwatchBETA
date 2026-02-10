@@ -1,4 +1,5 @@
 import { onReading } from './animations/controller.js';
+import { getBackgroundColor } from './animations/model.js';
 
 /**
  * dBwatch PWA - Stage 5: Polish & Integration
@@ -24,9 +25,7 @@ const MIN_CLICK_INTERVAL = 500; // Minimum time between Start/Stop clicks
 // Update intervals (in milliseconds)
 const VISUALIZER_UPDATE_INTERVAL = 500;  // 0.5 seconds
 const DB_READING_UPDATE_INTERVAL = 2000; // 2 seconds
-
-// Static background (animations will handle visual feedback instead of dynamic backgrounds)
-const STATIC_BACKGROUND = '../media/background_image_0.png';
+const BACKGROUND_COLOR_UPDATE_INTERVAL = 100; // 0.1 seconds for smoother color transitions
 
 // ===========================================
 // DOM Elements
@@ -62,6 +61,7 @@ let animationId = null;
 // ===========================================
 let lastVisualizerUpdate = 0;
 let lastDbReadingUpdate = 0;
+let lastBackgroundColorUpdate = 0;
 let currentDb = 0;
 
 // ===========================================
@@ -415,6 +415,12 @@ function processAudio() {
     // Store current dB for theming
     currentDb = db;
 
+    // Update background color more frequently for smooth transitions
+    if (now - lastBackgroundColorUpdate >= BACKGROUND_COLOR_UPDATE_INTERVAL) {
+        updateBackgroundColorDisplay(db);
+        lastBackgroundColorUpdate = now;
+    }
+
     // Update dB display at specified interval
     if (now - lastDbReadingUpdate >= DB_READING_UPDATE_INTERVAL) {
         updateDbDisplay(db);
@@ -481,6 +487,23 @@ function updateDbDisplay(db) {
     }
 
     syncAnimationWithDb(db);
+}
+
+/**
+ * Update background color based on dB value
+ * @param {number} db - Decibel value
+ */
+function updateBackgroundColorDisplay(db) {
+    try {
+        const color = getBackgroundColor(db);
+        const body = document.body;
+        if (body && color) {
+            // Use setProperty with !important to ensure highest CSS priority
+            body.style.setProperty('background-color', color, 'important');
+        }
+    } catch (error) {
+        console.warn('[background] Failed to update background color', error);
+    }
 }
 
 /**
@@ -671,6 +694,7 @@ function handleSimSliderChange() {
     
     // If sim mode is active and listening, update immediately
     if (simModeToggle.checked && isListening) {
+        updateBackgroundColorDisplay(db);
         updateDbDisplay(db);
         updateVisualizer(generateSimVisualizerData(db));
     }
@@ -906,14 +930,12 @@ async function resumeAudioContext() {
 // ===========================================
 
 /**
- * Preload static background image
+ * Initialize assets (no longer preloading static background image as we use dynamic colors)
  */
 function preloadAssets() {
-    // Preload static background image
-    const bgImg = new Image();
-    bgImg.src = STATIC_BACKGROUND;
-    
-    console.log('Background asset preloading initiated');
+    // Initialize background color with the first keyframe (76 dB)
+    updateBackgroundColorDisplay(76);
+    console.log('Dynamic background color system initialized');
 }
 
 // ===========================================

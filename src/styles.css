@@ -15,7 +15,7 @@ html, body {
     overflow: hidden;
 }
 
-/* Body with Background Image Support */
+/* Body with Dynamic Background Color */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     position: relative;
@@ -23,47 +23,11 @@ body {
     display: flex;
     flex-direction: column;
     
-    /* CSS Variables for background cross-fade */
-    --current-bg: url('../media/background_image_0.png');
-    --next-bg: url('../media/background_image_0.png');
-}
-
-/* Background Image Pseudo-elements for Cross-Fade */
-body::before,
-body::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    transition: opacity 0.8s ease-in-out;
-    z-index: -1;
-    will-change: opacity; /* Performance optimization */
-}
-
-body::before {
-    /* Current background - always visible */
-    background-image: var(--current-bg);
-    opacity: 1;
-}
-
-body::after {
-    /* Next background - fades in during transition */
-    background-image: var(--next-bg);
-    opacity: 0;
-}
-
-/* Transition state: swap opacity to cross-fade */
-body.transitioning::before {
-    opacity: 0;
-}
-
-body.transitioning::after {
-    opacity: 1;
+    /* Initial background color matching the first dB keyframe (76dB) */
+    background-color: #a4f12c !important;
+    
+    /* Smooth color transition for dynamic background updates */
+    transition: background-color 0.5s ease-in-out;
 }
 
 /* ===========================================
@@ -619,11 +583,6 @@ body.transitioning::after {
     }
     
     .visualizer .bar {
-        transition: none;
-    }
-    
-    body::before,
-    body::after {
         transition: none;
     }
 }

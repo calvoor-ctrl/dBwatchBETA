@@ -1,5 +1,5 @@
 import { player } from './bootstrap.js';
-import { classify, getStateConfig, resolveTransition, buildRangePath, animationState } from './model.js';
+import { classify, getStateConfig, resolveTransition, buildRangePath, animationState, getBackgroundColor } from './model.js';
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, Math.max(0, ms)));
 
@@ -83,7 +83,23 @@ async function playTransitionSequence(path, sequenceId) {
     await playSteady(path[path.length - 1], sequenceId);
 }
 
+/**
+ * Update the background color based on dB value
+ * @param {number} dbValue - Current dB level
+ */
+function updateBackgroundColor(dbValue) {
+    const color = getBackgroundColor(dbValue);
+    const body = document.body;
+    if (body) {
+        // Use setProperty with !important to ensure highest CSS priority
+        body.style.setProperty('background-color', color, 'important');
+    }
+}
+
 export async function onReading(dbValue) {
+    // Update background color for every dB reading
+    updateBackgroundColor(dbValue);
+
     if (!isPlayerReady()) {
         return;
     }
