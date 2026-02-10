@@ -94,6 +94,14 @@ function updateBackgroundColor(dbValue) {
         // Use setProperty with !important to ensure highest CSS priority
         body.style.setProperty('background-color', color, 'important');
     }
+    // Also update the dynamic theme color meta tag if the global function exists
+    if (typeof window.updateThemeColor === 'function') {
+        try {
+            window.updateThemeColor(color);
+        } catch (e) {
+            console.warn('[controller] Failed to update theme color:', e);
+        }
+    }
 }
 
 export async function onReading(dbValue) {

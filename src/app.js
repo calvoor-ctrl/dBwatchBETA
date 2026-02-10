@@ -191,6 +191,26 @@ function showErrorNotification(title, body) {
 // ===========================================
 
 /**
+ * Update the dynamic theme-color meta tag to match current background color
+ * This makes the status bar and nav bar blend with the app's background on mobile
+ * @param {string} color - Hex color code (e.g., '#a4f12c')
+ */
+function updateThemeColor(color) {
+    try {
+        let themeColorMeta = document.getElementById('dynamic-theme-color');
+        if (!themeColorMeta) {
+            // Fallback: create if it doesn't exist
+            themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        }
+        if (themeColorMeta && color) {
+            themeColorMeta.setAttribute('content', color);
+        }
+    } catch (error) {
+        console.warn('[theme-color] Failed to update dynamic theme color:', error);
+    }
+}
+
+/**
  * Update status message in the controls dialog
  * @param {string} message - Status message to display
  * @param {boolean} isError - Whether this is an error message
@@ -533,6 +553,8 @@ function updateBackgroundColorDisplay(db) {
         if (body && color) {
             // Use setProperty with !important to ensure highest CSS priority
             body.style.setProperty('background-color', color, 'important');
+            // Also update the theme-color meta tag so status bar blends in
+            updateThemeColor(color);
         }
     } catch (error) {
         console.warn('[background] Failed to update background color', error);
@@ -1057,3 +1079,6 @@ function applyUpdate() {
 
 // Expose applyUpdate for the update banner button
 window.applyUpdate = applyUpdate;
+
+// Expose updateThemeColor globally so controller.js can call it
+window.updateThemeColor = updateThemeColor;

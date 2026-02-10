@@ -14,6 +14,7 @@ html, body {
     height: 100dvh;
     margin: 0;
     padding: 0;
+    padding-bottom: env(safe-area-inset-bottom);
     overflow: hidden;
 }
 
@@ -27,6 +28,7 @@ body {
     
     /* Initial background color matching the first dB keyframe (76dB) */
     background-color: #a4f12c !important;
+    background-attachment: fixed;
     
     /* Smooth color transition for dynamic background updates */
     transition: background-color 0.5s ease-in-out;
@@ -42,6 +44,10 @@ body {
     /* Prefer the mobile-aware dynamic viewport unit when available. Fallback to 100vh. */
     height: calc(var(--dvh, 1vh) * 100);
     min-height: 100vh;
+    /* Extend behind safe area so canvas truly fills the viewport including nav bar area */
+    bottom: 0;
+    padding-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
     transform-origin: center center;
     z-index: 10;
     pointer-events: none;
@@ -137,7 +143,7 @@ body {
    =========================================== */
 .db-reading {
     position: fixed;
-    bottom: 70px;
+    bottom: calc(70px + env(safe-area-inset-bottom));
     left: 20px;
     z-index: 50;
     display: flex;
@@ -184,6 +190,7 @@ body {
     gap: 2px;
     align-items: flex-end;
     padding: 5px 10px;
+    padding-bottom: max(5px, env(safe-area-inset-bottom));
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);

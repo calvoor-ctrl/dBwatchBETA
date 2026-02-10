@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, shrink-to-fit=no">
     <meta name="theme-color" content="#000000">
+    <!-- Dynamic theme-color meta tag will be updated by JavaScript based on dB levels -->
+    <meta id="dynamic-theme-color" name="theme-color" content="#a4f12c">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="dBwatch">
@@ -15,6 +17,34 @@
     <link rel="apple-touch-icon" sizes="192x192" href="./icons/icon-192x192.png">
     <link rel="apple-touch-icon" sizes="512x512" href="./icons/icon-512x512.png">
     <title>dB Watch</title>
+    <script>
+        // Try to detect if running in immersive/fullscreen mode and handle system bar color
+        // For Android, the meta theme-color will be dynamically updated by app.js
+        // This script ensures proper viewport behavior and safe layout
+        (function() {
+            // Detect if in standalone/fullscreen PWA mode
+            const isStandalone = window.navigator.standalone === true || 
+                               window.matchMedia('(display-mode: standalone)').matches;
+            
+            if (isStandalone) {
+                document.documentElement.style.setProperty('--pwa-mode', 'standalone');
+            }
+            
+            // Ensure safe areas are respected by setting a CSS variable
+            function updateSafeAreas() {
+                const bottom = parseInt(
+                    getComputedStyle(document.documentElement)
+                        .getPropertyValue('--safe-area-inset-bottom') || '0'
+                );
+                if (bottom > 0) {
+                    document.documentElement.style.setProperty('--has-safe-bottom', '1');
+                }
+            }
+            
+            updateSafeAreas();
+            window.addEventListener('orientationchange', updateSafeAreas);
+        })();
+    </script>
 </head>
 <body>
     <canvas id="main_canvas" aria-hidden="true"></canvas>
