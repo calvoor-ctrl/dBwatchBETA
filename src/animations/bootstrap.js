@@ -6,6 +6,10 @@ const INITIAL_STATE_SRC = './media/state_1.json';
 
 let playerInstance = null;
 
+const setDvh = () => {
+    document.documentElement.style.setProperty('--dvh', `${window.innerHeight * 0.01}px`);
+};
+
 const resizeCanvas = () => {
     if (!canvas) {
         return;
@@ -27,6 +31,7 @@ const resizeCanvas = () => {
     }
 };
 
+
 const ensurePlayer = () => {
     if (playerInstance || !canvas) {
         return playerInstance;
@@ -39,7 +44,8 @@ const ensurePlayer = () => {
             loop: true,
             autoResize: true,
             renderConfig: {
-                freezeOnOffscreen: true
+                freezeOnOffscreen: true,
+                devicePixelRatio: window.devicePixelRatio || 1
             },
             mode: 'forward',
             src: INITIAL_STATE_SRC
@@ -71,9 +77,14 @@ const reloadInitialState = async () => {
 };
 
 if (canvas) {
+    setDvh();
     resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('resize', () => {
+        setDvh();
+        resizeCanvas();
+    });
     window.addEventListener('pageshow', () => {
+        setDvh();
         resizeCanvas();
         reloadInitialState();
     });
@@ -85,4 +96,22 @@ export const player = ensurePlayer();
 
 if (player) {
     reloadInitialState();
+}
+
+// Ensure layout is set to cover so animation scales to fill viewport (like preserveAspectRatio: 'xMidYMid slice')
+if (player && typeof player.setLayout === 'function') {
+    try {
+        player.setLayout({ fit: 'cover' });
+    } catch (e) {
+        console.warn('[animations] Failed to apply layout:cover', e);
+    }
+}
+
+// Make sure renderer uses current DPR if available
+if (player && typeof player.setRenderConfig === 'function') {
+    try {
+        player.setRenderConfig({ devicePixelRatio: window.devicePixelRatio || 1 });
+    } catch (e) {
+        console.warn('[animations] Failed to apply renderConfig devicePixelRatio', e);
+    }
 }

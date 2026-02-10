@@ -37,7 +37,9 @@ body {
     position: fixed;
     inset: 0;
     width: 100vw;
-    height: 100vh;
+    /* Prefer the mobile-aware dynamic viewport unit when available. Fallback to 100vh. */
+    height: calc(var(--dvh, 1vh) * 100);
+    min-height: 100vh;
     z-index: 10;
     pointer-events: none;
     background: transparent;
