@@ -191,26 +191,34 @@ function showErrorNotification(title, body) {
 // ===========================================
 
 /**
- * Update the dynamic theme-color meta tag and html element background to match current color
+ * Update the dynamic theme-color meta tag and all background elements to match current color
  * This makes the status bar and nav bar blend with the app's background on mobile
+ * Triple-sync ensures maximum compatibility across Android/iOS native rendering
  * @param {string} color - Hex color code (e.g., '#a4f12c')
  */
 function updateThemeColor(color) {
     try {
-        // Update the meta theme-color tag (primary method for system UI coloring)
+        if (!color) return;
+        
+        // 1. Update the meta theme-color tag (primary method for system UI coloring)
         let themeColorMeta = document.getElementById('dynamic-theme-color');
         if (!themeColorMeta) {
-            // Fallback: find or create if it doesn't exist
             themeColorMeta = document.querySelector('meta[name="theme-color"]');
         }
-        if (themeColorMeta && color) {
+        if (themeColorMeta) {
             themeColorMeta.setAttribute('content', color);
         }
         
-        // Also update the html element's background color
-        // This ensures the system navigation bar (which may pull from html) matches the theme
-        if (color) {
-            document.documentElement.style.setProperty('background-color', color, 'important');
+        // 2. Update the html element's background color (Android nav bar may pull from root)
+        document.documentElement.style.setProperty('background-color', color, 'important');
+        
+        // 3. Update the body background directly (fallback for various rendering engines)
+        document.body.style.setProperty('background-color', color, 'important');
+        
+        // 4. Update the edge-to-edge background div (nuclear option for forcing color behind system UI)
+        const bgDiv = document.getElementById('edge-to-edge-bg');
+        if (bgDiv) {
+            bgDiv.style.setProperty('background-color', color, 'important');
         }
     } catch (error) {
         console.warn('[theme-color] Failed to update dynamic theme color:', error);

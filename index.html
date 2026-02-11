@@ -47,6 +47,8 @@
     </script>
 </head>
 <body>
+    <!-- Edge-to-edge background div for forcing color behind system UI -->
+    <div id="edge-to-edge-bg" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; background-color: #a4f12c;"></div>
     <canvas id="main_canvas" aria-hidden="true"></canvas>
     <!-- Gear Icon (Controls Toggle) -->
     <button id="gear_icon" class="gear-icon" aria-label="Controls" title="Controls">
