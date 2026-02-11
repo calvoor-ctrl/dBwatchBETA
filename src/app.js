@@ -191,19 +191,26 @@ function showErrorNotification(title, body) {
 // ===========================================
 
 /**
- * Update the dynamic theme-color meta tag to match current background color
+ * Update the dynamic theme-color meta tag and html element background to match current color
  * This makes the status bar and nav bar blend with the app's background on mobile
  * @param {string} color - Hex color code (e.g., '#a4f12c')
  */
 function updateThemeColor(color) {
     try {
+        // Update the meta theme-color tag (primary method for system UI coloring)
         let themeColorMeta = document.getElementById('dynamic-theme-color');
         if (!themeColorMeta) {
-            // Fallback: create if it doesn't exist
+            // Fallback: find or create if it doesn't exist
             themeColorMeta = document.querySelector('meta[name="theme-color"]');
         }
         if (themeColorMeta && color) {
             themeColorMeta.setAttribute('content', color);
+        }
+        
+        // Also update the html element's background color
+        // This ensures the system navigation bar (which may pull from html) matches the theme
+        if (color) {
+            document.documentElement.style.setProperty('background-color', color, 'important');
         }
     } catch (error) {
         console.warn('[theme-color] Failed to update dynamic theme color:', error);

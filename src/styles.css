@@ -16,6 +16,7 @@ html, body {
     padding: 0;
     padding-bottom: env(safe-area-inset-bottom);
     overflow: hidden;
+    overscroll-behavior: none;
 }
 
 /* Body with Dynamic Background Color */
@@ -29,6 +30,7 @@ body {
     /* Initial background color matching the first dB keyframe (76dB) */
     background-color: #a4f12c !important;
     background-attachment: fixed;
+    overscroll-behavior: none;
     
     /* Smooth color transition for dynamic background updates */
     transition: background-color 0.5s ease-in-out;

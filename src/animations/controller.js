@@ -90,10 +90,18 @@ async function playTransitionSequence(path, sequenceId) {
 function updateBackgroundColor(dbValue) {
     const color = getBackgroundColor(dbValue);
     const body = document.body;
-    if (body) {
+    const html = document.documentElement;
+    
+    if (body && color) {
         // Use setProperty with !important to ensure highest CSS priority
         body.style.setProperty('background-color', color, 'important');
     }
+    
+    if (html && color) {
+        // Also update the html element so system nav bar (which may pull from root) gets the color
+        html.style.setProperty('background-color', color, 'important');
+    }
+    
     // Also update the dynamic theme color meta tag if the global function exists
     if (typeof window.updateThemeColor === 'function') {
         try {
